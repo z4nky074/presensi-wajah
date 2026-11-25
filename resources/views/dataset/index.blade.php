@@ -4,7 +4,7 @@
 <div class="topbar">
     <div>
         <h1>Dataset Wajah</h1>
-        <div class="muted">Daftarkan 3 sampai 5 foto per orang (cahaya dan sudut sedikit berbeda) agar pengenalan lebih akurat.</div>
+        <div class="muted">Daftarkan {{ $min }} sampai 5 foto per orang (cahaya dan sudut sedikit berbeda) agar pengenalan lebih akurat.</div>
     </div>
 </div>
 
@@ -19,13 +19,16 @@
                     <option value="siswa" @selected(old('peran') !== 'guru')>Siswa</option>
                     <option value="guru" @selected(old('peran') === 'guru')>Guru</option>
                 </select>
+                @error('peran') <div class="err">{{ $message }}</div> @enderror
             </div>
             <div class="field" id="box-siswa">
                 <label>Siswa</label>
                 <select name="id_siswa">
                     <option value="">- pilih siswa -</option>
                     @foreach ($siswa as $s)
-                        <option value="{{ $s->id_siswa }}" @selected(old('id_siswa') == $s->id_siswa)>{{ $s->nama }} ({{ $s->kelas->nama_kelas }})</option>
+                        <option value="{{ $s->id_siswa }}" @selected(old('id_siswa') == $s->id_siswa)>
+                            {{ $s->nama }} ({{ $s->kelas->nama_kelas }}) - {{ $jumlahSiswa[$s->id_siswa] ?? 0 }} foto
+                        </option>
                     @endforeach
                 </select>
                 @error('id_siswa') <div class="err">{{ $message }}</div> @enderror
@@ -35,19 +38,53 @@
                 <select name="id_guru">
                     <option value="">- pilih guru -</option>
                     @foreach ($guru as $g)
-                        <option value="{{ $g->id_guru }}" @selected(old('id_guru') == $g->id_guru)>{{ $g->nama }}</option>
+                        <option value="{{ $g->id_guru }}" @selected(old('id_guru') == $g->id_guru)>
+                            {{ $g->nama }} - {{ $jumlahGuru[$g->id_guru] ?? 0 }} foto
+                        </option>
                     @endforeach
                 </select>
                 @error('id_guru') <div class="err">{{ $message }}</div> @enderror
             </div>
         </div>
         <div class="field">
-            <label>Foto wajah (JPG atau PNG, maks 4 MB)</label>
-            <input type="file" name="foto" accept="image/jpeg,image/png" required>
+            <label>Foto wajah (JPG atau PNG, maks 4 MB per foto, maks 10 foto sekaligus)</label>
+            <input type="file" name="foto[]" accept="image/jpeg,image/png" multiple required>
+            <div class="muted">Tahan <b>Ctrl</b> atau <b>Shift</b> untuk memilih beberapa foto sekaligus.</div>
             @error('foto') <div class="err">{{ $message }}</div> @enderror
+            @error('foto.*') <div class="err">{{ $message }}</div> @enderror
         </div>
         <button class="btn" type="submit">Proses &amp; Simpan</button>
     </form>
+</div>
+
+<div class="card" style="max-width:760px">
+    <h2 style="margin-top:0">Kelengkapan Dataset</h2>
+    <p>
+        <b>{{ $lengkap }}</b> dari <b>{{ $total }}</b> orang sudah punya minimal {{ $min }} foto.
+        @if ($kurang->count() > 0)
+            <span class="muted">({{ $kurang->count() }} orang masih kurang)</span>
+        @endif
+    </p>
+
+    @if ($kurang->count() > 0)
+        <div class="table-wrap">
+        <table>
+            <thead><tr><th>Nama</th><th>Peran</th><th>Kelas</th><th>Jumlah foto</th></tr></thead>
+            <tbody>
+            @foreach ($kurang as $k)
+                <tr>
+                    <td>{{ $k['nama'] }}</td>
+                    <td>{{ $k['peran'] }}</td>
+                    <td>{{ $k['kelas'] }}</td>
+                    <td><b style="color:{{ $k['jumlah'] === 0 ? '#b91c1c' : '#b45309' }}">{{ $k['jumlah'] }}</b></td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+        </div>
+    @else
+        <p class="muted">Semua orang sudah memiliki dataset yang lengkap.</p>
+    @endif
 </div>
 
 <div class="card">
