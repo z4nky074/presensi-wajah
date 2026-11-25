@@ -7,6 +7,7 @@ use App\Http\Controllers\GuruController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\DatasetController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PresensiController;
 
 Route::get('/', fn () => redirect()->route('login'));
 
@@ -42,3 +43,8 @@ Route::middleware('role:admin')->group(function () {
         ->except(['index', 'show'])
         ->parameters(['jadwal' => 'jadwal']);
 });
+
+// Kiosk presensi wajah (tanpa login)
+Route::get('/presensi', [PresensiController::class, 'kiosk'])->name('kiosk');
+Route::post('/presensi/proses', [PresensiController::class, 'proses'])
+    ->middleware('throttle:60,1')->name('kiosk.proses');
