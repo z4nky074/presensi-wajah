@@ -5,19 +5,28 @@ namespace App\Services;
 use App\Models\DatasetWajah;
 
 /**
- * Mencocokkan face encoding dari kamera dengan seluruh dataset.
+ * Mencocokkan face encoding dari kamera dengan dataset.
  * Jarak Euclidean terkecil <= threshold dianggap cocok.
  */
 class PencocokWajah
 {
     /**
+     * @param  string|null  $peran  'siswa' atau 'guru' membatasi pencarian ke dataset peran itu;
+     *                              null berarti seluruh dataset.
      * @return array{peran:string,id:int,nama:string,jarak:float,confidence:float}|null
      */
-    public function cocokkan(array $encoding): ?array
+    public function cocokkan(array $encoding, ?string $peran = null): ?array
     {
         $terbaik = null;
 
-        foreach (DatasetWajah::with(['siswa', 'guru'])->get() as $d) {
+        $query = DatasetWajah::with(['siswa', 'guru']);
+        if ($peran === 'siswa') {
+            $query->whereNotNull('id_siswa');
+        } elseif ($peran === 'guru') {
+            $query->whereNotNull('id_guru');
+        }
+
+        foreach ($query->get() as $d) {
             $ref = json_decode($d->face_encoding, true);
             if (! is_array($ref) || count($ref) !== 128) {
                 continue;

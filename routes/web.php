@@ -6,8 +6,9 @@ use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\DatasetController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PresensiController;
+use App\Http\Controllers\RekapController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('login'));
 
@@ -16,7 +17,7 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', fn () => view('admin.dashboard'))->name('dashboard');
+    Route::get('/', [RekapController::class, 'dashboard'])->name('dashboard');
     Route::resource('kelas', KelasController::class)->except('show')->parameters(['kelas' => 'kelas']);
     Route::resource('siswa', SiswaController::class)->except('show')->parameters(['siswa' => 'siswa']);
     Route::resource('guru', GuruController::class)->except('show')->parameters(['guru' => 'guru']);
@@ -26,11 +27,21 @@ Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function
     Route::post('/dataset', [DatasetController::class, 'store'])->name('dataset.store');
     Route::get('/dataset/{dataset}/foto', [DatasetController::class, 'foto'])->name('dataset.foto');
     Route::delete('/dataset/{dataset}', [DatasetController::class, 'destroy'])->name('dataset.destroy');
+
+    // Presensi wajah (kamera): hanya admin; admin memilih presensi guru atau siswa
+    Route::get('/presensi', [PresensiController::class, 'kiosk'])->name('presensi');
+    Route::post('/presensi/proses', [PresensiController::class, 'proses'])
+        ->middleware('throttle:60,1')->name('presensi.proses');
 });
 
 Route::middleware('role:guru')->prefix('guru')->name('guru.')->group(function () {
-    Route::get('/', fn () => view('guru.dashboard'))->name('dashboard');
+    Route::get('/', [RekapController::class, 'dashboard'])->name('dashboard');
 });
+
+// Rekap presensi: admin dan guru boleh melihat
+Route::get('/rekap', [RekapController::class, 'index'])
+    ->middleware('role:admin,guru')
+    ->name('rekap.index');
 
 // Jadwal: admin dan guru boleh melihat
 Route::get('/jadwal', [JadwalController::class, 'index'])
@@ -43,8 +54,3 @@ Route::middleware('role:admin')->group(function () {
         ->except(['index', 'show'])
         ->parameters(['jadwal' => 'jadwal']);
 });
-
-// Kiosk presensi wajah (tanpa login)
-Route::get('/presensi', [PresensiController::class, 'kiosk'])->name('kiosk');
-Route::post('/presensi/proses', [PresensiController::class, 'proses'])
-    ->middleware('throttle:60,1')->name('kiosk.proses');

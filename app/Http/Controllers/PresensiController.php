@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-/** Presensi wajah datang/pulang lewat layar kiosk (tanpa login). */
+/** Presensi wajah datang/pulang lewat halaman kamera di dashboard admin (wajib login admin). */
 class PresensiController extends Controller
 {
     private const HARI = [0 => 'Minggu', 1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu'];
@@ -31,6 +31,7 @@ class PresensiController extends Controller
     public function proses(Request $request): JsonResponse
     {
         $data = $request->validate([
+            'peran' => 'required|in:siswa,guru',
             'jenis' => 'required|in:datang,pulang',
             'image' => 'required|string',
         ]);
@@ -51,8 +52,8 @@ class PresensiController extends Controller
             };
         }
 
-        // 2. Pencocokan dengan dataset
-        $cocok = $this->pencocok->cocokkan($hasil['encoding']);
+        // 2. Pencocokan dengan dataset peran yang dipilih (siswa atau guru)
+        $cocok = $this->pencocok->cocokkan($hasil['encoding'], $data['peran']);
         if ($cocok === null) {
             return $this->balas('unknown', 'Wajah tidak dikenali. Presensi tidak dicatat.');
         }
