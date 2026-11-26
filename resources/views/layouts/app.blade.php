@@ -18,10 +18,12 @@
             <a href="{{ route('admin.siswa.index') }}" class="{{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">Data Siswa</a>
             <a href="{{ route('admin.guru.index') }}" class="{{ request()->routeIs('admin.guru.*') ? 'active' : '' }}">Data Guru</a>
             <a href="{{ route('admin.dataset.index') }}" class="{{ request()->routeIs('admin.dataset.*') ? 'active' : '' }}">Dataset Wajah</a>
+            <a href="{{ route('admin.presensi') }}" class="{{ request()->routeIs('admin.presensi') ? 'active' : '' }}">Presensi Wajah</a>
         @else
             <a href="{{ route('guru.dashboard') }}" class="{{ request()->routeIs('guru.dashboard') ? 'active' : '' }}">Dashboard</a>
         @endif
 
+        <a href="{{ route('rekap.index') }}" class="{{ request()->routeIs('rekap.*') ? 'active' : '' }}">Rekap Presensi</a>
         <a href="{{ route('jadwal.index') }}" class="{{ request()->routeIs('jadwal.*') ? 'active' : '' }}">Jadwal Presensi</a>
 
         <div class="user">
